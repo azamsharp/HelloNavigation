@@ -1,0 +1,212 @@
+
+//
+//  ContentView.swift
+//  Learn
+//
+//  Created by Mohammad Azam on 8/11/22.
+//
+
+import SwiftUI
+
+struct ContentView: View {
+    
+    @State private var places = Place.all()
+    //@State private var path: [Place] = []
+    @State private var path = NavigationPath()
+ 
+    var body: some View {
+        NavigationStack(path: $path) {
+            
+            VStack {
+                
+                Button("Display Random Number") {
+                    let randomNumber = Int.random(in: 1...10)
+                    path.append(randomNumber)
+                }
+                
+                Button("Show Featured City") {
+                    
+                    guard let featuredPlace = places.first(where: { $0.isFeatured }) else { return }
+                    path.append(featuredPlace)
+                    
+                }.buttonStyle(.borderedProminent)
+                
+                List(places, id: \.name) { place in
+                    NavigationLink(value: place) {
+                        PlaceCellView(place: place)
+                    }
+                }
+                
+                .navigationTitle("Places")
+            }.navigationDestination(for: Place.self) { place in
+                PlaceDetailView(place: place)
+            }
+            .navigationDestination(for: Int.self) { intValue in
+                Text("\(intValue)")
+            }
+        }
+        
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            ContentView()
+        }
+    }
+}
+
+struct PlaceCellView: View {
+    
+    let place: Place
+    
+    var body: some View {
+        HStack {
+            Image(place.photo)
+                .resizable()
+                .frame(width: 75, height: 75)
+            Text(place.name)
+        }
+    }
+}
+
+
+
+
+
+
+
+
+//
+//  HelloNavigationApp.swift
+//  HelloNavigation
+//
+//  Created by Mohammad Azam on 8/17/22.
+//
+
+import SwiftUI
+
+class Router: ObservableObject {
+    @Published var path = NavigationPath()
+    
+    func popToRoot() {
+        path.removeLast(path.count - 1)
+    }
+}
+
+enum Route: Hashable {
+    case home
+    case detail(Place)
+    case reviews
+}
+
+@main
+struct HelloNavigationApp: App {
+    
+    @StateObject private var router = Router()
+    
+    var body: some Scene {
+        WindowGroup {
+            NavigationStack(path: $router.path) {
+                ContentView()
+                    .navigationDestination(for: Route.self) { route in
+                        switch route {
+                            case .home:
+                                ContentView()
+                            case .reviews:
+                                ReviewListView()
+                            case .detail(let place):
+                                PlaceDetailView(place: place)
+                        }
+                    }
+            }.environmentObject(router)
+        }
+    }
+}
+
+
+
+
+//
+//  ContentView.swift
+//  Learn
+//
+//  Created by Mohammad Azam on 8/11/22.
+//
+
+import SwiftUI
+
+struct ContentView: View {
+    
+    @State private var places = Place.all()
+    //@State private var path: [Place] = []
+    //@State private var path = NavigationPath()
+ 
+    var body: some View {
+            
+            VStack {
+                                
+                Button("Display Random Number") {
+                    //let randomNumber = Int.random(in: 1...10)
+                    //path.append(randomNumber)
+                }
+                
+                Button("Show Featured City") {
+                    
+                    //guard let featuredPlace = places.first(where: { $0.isFeatured }) else { return }
+                    //path.append(featuredPlace)
+                    
+                }.buttonStyle(.borderedProminent)
+                
+                List(places, id: \.name) { place in
+                    NavigationLink(value: Route.detail(place)) {
+                        PlaceCellView(place: place)
+                    }
+                }
+                
+                .navigationTitle("Places")
+            }
+            /*
+            .navigationDestination(for: Place.self) { place in
+                PlaceDetailView(place: place)
+            }
+            .navigationDestination(for: Int.self) { intValue in
+                Text("\(intValue)")
+            } */
+        
+        
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            ContentView()
+                .navigationDestination(for: Route.self) { route in
+                switch route {
+                    case .home:
+                        ContentView()
+                    case .reviews:
+                        ReviewListView()
+                    case .detail(let place):
+                        PlaceDetailView(place: place)
+                }
+            }
+        }
+    }
+}
+
+struct PlaceCellView: View {
+    
+    let place: Place
+    
+    var body: some View {
+        HStack {
+            Image(place.photo)
+                .resizable()
+                .frame(width: 75, height: 75)
+            Text(place.name)
+        }
+    }
+}
